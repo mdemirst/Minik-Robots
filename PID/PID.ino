@@ -20,7 +20,7 @@ double SetPointSpeed;
 double InputPos;
 double OutputPos;
 double SetPointPos;
-double KP_S = 10 ; // Proportional gain speed
+double KP_S = 10 ; // Proportional gain speed //!mahmut Bu degerleri EEPROM'a kaydetmek iyi olur. PID tuning yaptıktan sonra tekrar kod yuklemeye gerek kalmaz. PID tuning icin fonksiyon yazmamız gerekiyor. Seri porttan tuning yapabiliyor olmamız gerek.
 double KI_S = 2 ; // Integration gain
 double KD_S = 1 ; // Differential gain 
 double KP_P = 20 ; // Proportional gain position
@@ -100,7 +100,7 @@ double getPosition(char encoderName){
 //Uses encoder data
 //if encoderName=='A' function returns Motor A speed
 //if encoderName=='B' function returns Motor B speed
-double getSpeed(char encoderName){
+double getSpeed(char encoderName){  //!mahmut getSpeed delay kullanıyor. Her speed hesaplamasında beklemek donguyu yavaslatir. Speed hesaplayan bir fonksiyon yapıp bunu belli periyotta timer interrupt cagirmaliyiz. Sonrasinda speed'i direk global variableden okuyabilsin.
       double scale = 0.000523 * DIAMETER ;
       int timeInterval = 10;//milliseconds
       long pos1;
