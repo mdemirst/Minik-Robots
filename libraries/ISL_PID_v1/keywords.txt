@@ -1,0 +1,35 @@
+#######################################
+# Syntax Coloring Map For PID Library
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+IslPID	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+getSpeedParam	KEYWORD2
+getPosParam	KEYWORD2
+setSpeedParam	KEYWORD2
+setPosParam	KEYWORD2
+getMotorCounter	KEYWORD2
+setMotorSpeedValue	KEYWORD2
+setMotorPositionValue	KEYWORD2
+getMotorSpeedValue	KEYWORD2
+getMotorPositionValue	KEYWORD2
+setMotorSpeedValues	KEYWORD2
+setMotorPositionValues	KEYWORD2
+updateSpeedPID	KEYWORD2
+updatePosPID	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+
+
+
+
