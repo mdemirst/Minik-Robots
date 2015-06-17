@@ -165,15 +165,15 @@ public:
       "ld	r25, Z"			"\n\t"  // r25 = pin2 input
       "ld	r31, X+"		"\n\t"	// r31 = pin2 mask
       "and	r25, r31"	"\n\t"
-      "breq	DECPOS"		"\n\t"	// if (pin2)
-      "INCPOS:"			"\n\t"
+      "breq	L%=DECPOS"		"\n\t"	// if (pin2)
+      "L%=INCPOS:"			"\n\t"
       "ldi	r30, lo8(pm(L%=plus1))"	"\n\t"
       "ldi	r31, hi8(pm(L%=plus1))"	"\n\t"
-      "rjmp	CONT"       "\n\t"
-      "DECPOS:"			"\n\t"
+      "rjmp	L%=CONT"       "\n\t"
+      "L%=DECPOS:"			"\n\t"
       "ldi	r30, lo8(pm(L%=minus1))"	"\n\t"
       "ldi	r31, hi8(pm(L%=minus1))"	"\n\t"
-      "CONT:"			"\n\t"
+      "L%=CONT:"			"\n\t"
       "ld	r22, X+"		"\n\t"
       "ld	r23, X+"		"\n\t"
       "ld	r24, X+"		"\n\t"
