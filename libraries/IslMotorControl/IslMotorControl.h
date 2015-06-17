@@ -26,11 +26,11 @@
 #define PIN_CNY70_2 40
 #define PIN_CNY70_3 38
 
-#define PIN_MOT1_E1 19 //2 //IO 21
-#define PIN_MOT1_E2 18 //3// IO 20
+#define PIN_MOT1_E1 21 //2
+#define PIN_MOT1_E2 20 //3
 
-#define PIN_MOT2_E1 20 //4 //IO 19
-#define PIN_MOT2_E2 21 //5 //IO 18
+#define PIN_MOT2_E1 19 //4 
+#define PIN_MOT2_E2 18 //5 
 
 #define PIN_MOT1_PWM   3    //Motor 1 PWM pin
 #define PIN_MOT1_BRAKE 9    //Motor 1 brake pin
@@ -52,7 +52,7 @@
 #define PIN_BTN2 50
 #define PIN_BTN3 48
 
-#define PIN_LED1 46
+#define PIN_LED1 10
 #define PIN_LED2 44
 
 #define SPEED_SAMPLE_TIME 50
@@ -62,8 +62,8 @@
 
 #define WHEEL_DIAMETER 9  //Wheel diameter is in cm.
 #define COUNTS_PER_ROTATION 12000
-#define COUNTER2CM  (0.0023561944)
-#define CM2COUNTER  (424.413181)
+#define COUNTER2CM  0.000213542//-->Ihsan
+#define CM2COUNTER  4682.90//-->Ihsan
 #define SEC_MS      1000
 #define MOT0_DIR    1
 #define MOT1_DIR    -1
@@ -105,6 +105,8 @@
 #define CMD_SET_TMOD1     0x14
 #define CMD_SET_COUNTERS  0x15
 #define CMD_SET_SPEEDS    0x16
+#define CMD_GET_DISTS     0x17	//Get sharp distance sensor information in order Right-Left
+#define CMD_GET_LINES     0x18	//Get line follower sensor information in order Right-Middle-Left
 
 #define PACKET_RECEIVED   0x00
 
@@ -145,6 +147,12 @@ class IslMotorControl
     
     int distSensorL;
     int distSensorR;
+	int distSensorLmm;
+	int distSensorRmm;
+	
+	int lineR;
+	int lineM;
+	int lineL;
 
   public:
     bool   isSpeedPIDActive;
@@ -193,6 +201,7 @@ class IslMotorControl
     void setMotorSpeed(char motor, long speed);
     void setMotorSpeeds(long speed1, long speed2);
     void setMotorCounters(long counter1, long counter2);
+	void sendPeriodicCounter();
 
   public:
     bool job1ms();

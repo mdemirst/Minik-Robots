@@ -1,13 +1,9 @@
-﻿Build started 14.4.2015 20:09:48.
-     1>Project "c:\Users\Mahmut\documents\visual studio 2013\Projects\IslMotorControlConsole\IslMotorControlConsole\IslMotorControlConsole.vcxproj" on node 2 (Build target(s)).
-     1>Link:
-         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"c:\users\mahmut\documents\visual studio 2013\Projects\IslMotorControlConsole\Debug\IslMotorControlConsole.exe" /INCREMENTAL /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"c:\users\mahmut\documents\visual studio 2013\Projects\IslMotorControlConsole\Debug\IslMotorControlConsole.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"c:\users\mahmut\documents\visual studio 2013\Projects\IslMotorControlConsole\Debug\IslMotorControlConsole.lib" /MACHINE:X86 Debug\interface.obj
-         Debug\main.obj
-         Debug\packConstructor.obj
-         Debug\Serial.obj
-         IslMotorControlConsole.vcxproj -> c:\users\mahmut\documents\visual studio 2013\Projects\IslMotorControlConsole\Debug\IslMotorControlConsole.exe
-     1>Done Building Project "c:\Users\Mahmut\documents\visual studio 2013\Projects\IslMotorControlConsole\IslMotorControlConsole\IslMotorControlConsole.vcxproj" (Build target(s)).
-
-Build succeeded.
-
-Time Elapsed 00:00:00.22
+﻿  Serial.cpp
+c:\users\mahmut\documents\visual studio 2013\projects\islmotorcontrolconsole\islmotorcontrolconsole\serial.cpp(1026): warning C4800: 'BOOL' : forcing value to bool 'true' or 'false' (performance warning)
+c:\users\mahmut\documents\visual studio 2013\projects\islmotorcontrolconsole\islmotorcontrolconsole\serial.cpp(1093): warning C4800: 'BOOL' : forcing value to bool 'true' or 'false' (performance warning)
+c:\users\mahmut\documents\visual studio 2013\projects\islmotorcontrolconsole\islmotorcontrolconsole\serial.cpp(1104): warning C4800: 'BOOL' : forcing value to bool 'true' or 'false' (performance warning)
+  packConstructor.cpp
+  main.cpp
+  interface.cpp
+  Generating Code...
+  IslMotorControlConsole.vcxproj -> C:\Users\Mahmut\Documents\Visual Studio 2013\Projects\IslMotorControlConsole\Debug\IslMotorControlConsole.exe

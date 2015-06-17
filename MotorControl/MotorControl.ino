@@ -84,9 +84,11 @@ IslMotorControl mot;  //Initialize motor control class.
                       //    mot.mot2Speed;
 void setup()
 {
+  pinMode(10, OUTPUT);
   Serial.begin(19200);  //Don't change it. Standart communication 
                         //protocol with computer uses 19200 bps
 }
+
 
 void loop()
 {
@@ -112,6 +114,7 @@ void loop()
     Serial.print(" ");
     Serial.println(mot.distSensor2);
     */
+    //mot.sendPeriodicCounter();
     mot.jobDone100ms();
   }
   if(mot.job1000ms() == true)  //This block is guaranteed to be called in every 1 sec

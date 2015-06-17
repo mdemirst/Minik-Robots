@@ -151,6 +151,40 @@ IslMotorControl::IslMotorControl()
 
 }
 
+void IslMotorControl::sendPeriodicCounter()
+{
+  int packetLength = 5 + PROTOCOL_CONTROL_SIZE
+      + PROTOCOL_N_FOOTER;
+  char pack[30];
+
+  pack[0] = PROTOCOL_START_0;
+  pack[1] = PROTOCOL_START_1;
+  pack[2] = PROTOCOL_START_2;
+  pack[3] = 0x04;   //Slave
+  pack[4] = CMD_GET_COUNTER;
+  pack[5] = 0x11;
+  pack[6] = DEVICEID; //receiver
+  pack[7] = 0x00;
+  pack[8] = 0x00;
+
+ 
+  long temp = 0x00000000;
+
+  temp = (long)getMotorCounter(0x00);
+
+  pack[PROTOCOL_DATA_POS + 1] = char(temp >> 24);
+  pack[PROTOCOL_DATA_POS + 2] = char(temp >> 16);
+  pack[PROTOCOL_DATA_POS + 3] = char(temp >> 8);
+  pack[PROTOCOL_DATA_POS + 4] = char(temp);
+  packetLength = 5;
+
+  // recalculate the check sums
+  refreshPack(pack);
+
+  //sendBuffer.clear();
+  Serial.write(pack, packetLength + PROTOCOL_CONTROL_SIZE + PROTOCOL_N_FOOTER);
+}
+
 double IslMotorControl::zeroAbsorb(double val)
 {
   if (val > -0.00001 && val < 0.00001)
@@ -360,15 +394,15 @@ void IslMotorControl::setSpeedParam(char motor, int p, int i, int d){
 }
 void IslMotorControl::setPosParam(char motor, int p, int i, int d){
   if (motor == (char)0x00){
-    KP_P_1 = p;
-    KI_P_1 = i;
-    KD_P_1 = d;
+    KP_P_1 = p/1000.0;
+    KI_P_1 = i/1000.0;
+    KD_P_1 = d/1000.0;
     PIDPos1->SetTunings(KP_P_1, KI_P_1, KD_P_1);
   }
   else{
-    KP_P_2 = p;
-    KI_P_2 = i;
-    KD_P_2 = d;
+    KP_P_2 = p/1000.0;
+    KI_P_2 = i/1000.0;
+    KD_P_2 = d/1000.0;
     PIDPos2->SetTunings(KP_P_2, KI_P_2, KD_P_2);
   }
 }
@@ -505,7 +539,7 @@ void IslMotorControl::respondPack(char* pack) {
         ((((long)pack[PROTOCOL_DATA_POS + 2]) << 16) & 0x00FF0000) |
         ((((long)pack[PROTOCOL_DATA_POS + 3]) << 8 ) & 0x0000FF00) |
         ((((long)pack[PROTOCOL_DATA_POS + 4])      ) & 0x000000FF)  ));
-
+		
       packetLength = 1;
     }
 
@@ -612,6 +646,32 @@ void IslMotorControl::respondPack(char* pack) {
        
 
       packetLength = 1;
+    }
+	
+	// getDistances command
+    else if (getPackedTask(pack) == (char)CMD_GET_DISTS) {
+
+		temp = (int) distSensorR;
+
+		pack[PROTOCOL_DATA_POS + 1] = char(temp >> 8) & 0xFF;
+		pack[PROTOCOL_DATA_POS + 2] = char(temp) & 0xFF;
+		
+		temp = (int) distSensorL;
+
+		pack[PROTOCOL_DATA_POS + 3] = char(temp >> 8) & 0xFF;
+		pack[PROTOCOL_DATA_POS + 4] = char(temp) & 0xFF; 
+		
+		packetLength = 5;
+    }
+	
+	// getLines command
+    else if (getPackedTask(pack) == (char)CMD_GET_LINES) {
+
+		pack[PROTOCOL_DATA_POS + 1] = char(lineR) & 0xFF;
+		pack[PROTOCOL_DATA_POS + 2] = char(lineM) & 0xFF;
+		pack[PROTOCOL_DATA_POS + 3] = char(lineL) & 0xFF;
+				
+		packetLength = 4;
     }
 
     else {

@@ -66,12 +66,55 @@ public:
 			case 0x03:
 				result = printPositionPIDParameters(senderCard, BUFFER);
 				break;
+      case 0x17:
+        result = printDistances(senderCard, BUFFER);
+        break;
+      case 0x18:
+        result = printLines(senderCard, BUFFER);
+        break;
 		}	
 
 		return result;
 	}
 
+  int printDistances(int Sender, unsigned char* Buffer) {
+    //sayac degerinin yazdirilmasinda kullaniliyor.
+    int dist1 = 0;
+    int dist2 = 0;
 
+    unsigned char a1, a2, a3, a4;
+    a1 = Buffer[dataStart + 1];
+    a2 = Buffer[dataStart + 2];
+    a3 = Buffer[dataStart + 3];
+    a4 = Buffer[dataStart + 4];
+
+    dist1 = (int)(((int)(a1 << 8) & 0xFF00) | ((int)(a2)& 0x00FF));
+    dist2 = (int)(((int)(a3 << 8) & 0xFF00) | ((int)(a4)& 0x00FF));
+
+    printf("Right: %d and Left: %d mm\n", dist1, dist2);
+
+    return 1;
+  }
+
+  int printLines(int Sender, unsigned char* Buffer) {
+    //sayac degerinin yazdirilmasinda kullaniliyor.
+    int lineR = 0;
+    int lineM = 0;
+    int lineL = 0;
+
+    char a1, a2, a3;
+    a1 = Buffer[dataStart + 1];
+    a2 = Buffer[dataStart + 2];
+    a3 = Buffer[dataStart + 3];
+
+    lineR = (int)((a1) & 0xFF);
+    lineM = (int)((a2) & 0xFF);
+    lineL = (int)((a3) & 0xFF);
+
+    printf("Right: %d Middle: %d Left: %d", lineR, lineM, lineL);
+
+    return 1;
+  }
 	int printMotorCounter(int Sender, unsigned char* Buffer) {
 		//sayac degerinin yazdirilmasinda kullaniliyor.
 		int motorCounter = 0;
@@ -443,4 +486,53 @@ public:
 		return ReceivePacket(myRecCursor, 0);
 	}
 
+  int getDistances() {
+
+    char ReceiverCard[3];
+    
+    char receiverCard1[3] = { 0x06, 0x00, 0x00 };
+
+    for (int i = 0; i < 3; i++)
+      ReceiverCard[i] = receiverCard1[i];
+    
+
+    int result;
+    char *temppack;
+    packet = new char[1];
+
+    temppack = temp->makePacket(0x00, packet, 1, 0x17, ReceiverCard);
+
+    terminal->Write(temppack, 13 * sizeof(char));
+
+    Sleep(CONST_ONE_TO_ONE_SLEEP_TIME);
+
+    result = ReceivePacket(myRecCursor, 0);
+
+    return result;
+  }
+
+  int getLines() {
+
+    char ReceiverCard[3];
+
+    char receiverCard1[3] = { 0x06, 0x00, 0x00 };
+
+    for (int i = 0; i < 3; i++)
+      ReceiverCard[i] = receiverCard1[i];
+
+
+    int result;
+    char *temppack;
+    packet = new char[1];
+
+    temppack = temp->makePacket(0x00, packet, 1, 0x18, ReceiverCard);
+
+    terminal->Write(temppack, 13 * sizeof(char));
+
+    Sleep(CONST_ONE_TO_ONE_SLEEP_TIME);
+
+    result = ReceivePacket(myRecCursor, 0);
+
+    return result;
+  }
 };

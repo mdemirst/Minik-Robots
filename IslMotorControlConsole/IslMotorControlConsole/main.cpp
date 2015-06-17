@@ -29,6 +29,8 @@ void printMenu(void) {
   printf("\t8. Get speed PID coefficients\n");
   printf("\t9. Set position PID coefficients\n");
   printf("\t10. Get position PID coefficients\n");
+  printf("\t11. Get sharp distance sensors\n");
+  printf("\t12. Get line follower status\n");
   printf("\n\t0 . Exit\n\n\nYour Choice : ");
 
 }
@@ -405,6 +407,20 @@ int main()
 
         break;
 
+      }
+
+      //getDistances
+      case 11:
+      {
+        (*terminal).getDistances();
+        break;
+      }
+
+      //getDistances
+      case 12:
+      {
+        (*terminal).getLines();
+        break;
       }
     }
     
