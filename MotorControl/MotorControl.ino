@@ -106,14 +106,16 @@ void loop()
   if(mot.job10ms() == true)  //This block is guaranteed to be called in every 10ms
   {
     mot.jobDone10ms();
+    float a = 1;
+    mot.setMotorCounters(a*10000,-10000*a);
   }
   if(mot.job100ms() == true)  //This block is guaranteed to be called in every 100ms
   {
-    /*
-    Serial.print(mot.distSensor1);
+    
+    Serial.print(mot.mot1Count);
     Serial.print(" ");
-    Serial.println(mot.distSensor2);
-    */
+    Serial.println(mot.mot2Count);
+    
     //mot.sendPeriodicCounter();
     mot.jobDone100ms();
   }

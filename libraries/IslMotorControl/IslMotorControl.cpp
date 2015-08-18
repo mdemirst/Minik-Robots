@@ -213,7 +213,6 @@ void IslMotorControl::speedPIDUpdate()
   Serial.print(mot1TargetSpeed);
   */
 
-
   if (mot1PWM > 0)
   {
     digitalWrite(PIN_MOT1_DIR, HIGH);
@@ -243,6 +242,7 @@ void IslMotorControl::speedPIDUpdate()
   Serial.print(" ");
   Serial.println(mot2TargetSpeed);
   */
+
   if (mot2PWM > 0)
   {
     digitalWrite(PIN_MOT2_DIR, HIGH);
@@ -265,8 +265,11 @@ void IslMotorControl::speedPIDUpdate()
 void IslMotorControl::posPIDUpdate()
 {
 
+		float PWM_max_adaptive_1 = constrain(PWM_MAX - ((fabs(mot1Speed) * 155) / (2000/200.0)),100,255);
+		float PWM_max_adaptive_2 = constrain(PWM_MAX - ((fabs(mot2Speed) * 155) / (2000/200.0)),100,255);
+
     PIDPos1->Compute();
-    mot1PWM = constrain(mot1PIDPWMOut, -1 * PWM_MAX, PWM_MAX);
+    mot1PWM = constrain(mot1PIDPWMOut, -1 * PWM_max_adaptive_1, PWM_max_adaptive_1);
     
     if (mot1PWM > 0)
     {
@@ -287,7 +290,7 @@ void IslMotorControl::posPIDUpdate()
 
 
     PIDPos2->Compute();
-    mot2PWM = constrain(mot2PIDPWMOut, -1 * PWM_MAX, PWM_MAX);
+    mot2PWM = constrain(mot2PIDPWMOut, -1 * PWM_max_adaptive_2, PWM_max_adaptive_2);
 
     if (mot2PWM > 0)
     {
@@ -324,8 +327,11 @@ void IslMotorControl::updateMotors()
     mot1Count = mot1Enc->read();
     mot2Count = mot2Enc->read();
 
-    mot1Speed = (mot1Count - mot1CountOld) * SPEED_SAMPLE_TIME / ((float)timeInterval);
-    mot2Speed = (mot2Count - mot2CountOld) * SPEED_SAMPLE_TIME / ((float)timeInterval);
+    float mot1SpeedTemp = (mot1Count - mot1CountOld) * SPEED_SAMPLE_TIME / ((float)timeInterval);
+    float mot2SpeedTemp = (mot2Count - mot2CountOld) * SPEED_SAMPLE_TIME / ((float)timeInterval);
+
+		mot1Speed = (mot1Speed * (SPEED_FILTER_CONST-1) + mot1SpeedTemp ) / SPEED_FILTER_CONST;
+		mot2Speed = (mot2Speed * (SPEED_FILTER_CONST-1) + mot2SpeedTemp ) / SPEED_FILTER_CONST;
 
     mot1CountOld = mot1Count;
     mot2CountOld = mot2Count;
@@ -411,60 +417,49 @@ void IslMotorControl::setPosParam(char motor, int p, int i, int d){
 long IslMotorControl::getMotorCounter(char motor){
 
   if (motor == (char)0x00)
-    return MOT0_DIR*mot1Count*COUNTER2CM;
+    return mot1Count;
   else
-    return MOT1_DIR*mot2Count*COUNTER2CM;
+    return mot2Count;
 }
 void IslMotorControl::setMotorCounter(char motor, long counterVal){
 
-  if (counterVal == -1000)
-  {
-    digitalWrite(PIN_LED1, HIGH); //Yellow
-    digitalWrite(PIN_LED2, LOW);
-  }
-  else
-  {
-    digitalWrite(PIN_LED1, LOW);
-    digitalWrite(PIN_LED2, HIGH); //Green
-  }
-
   isSpeedPIDActive = false;
   if (motor == (char)0x00){
-    mot1TargetPos = MOT0_DIR*counterVal*CM2COUNTER;
+    mot1TargetPos = counterVal;
   }
   else{
-    mot2TargetPos = MOT1_DIR*counterVal*CM2COUNTER;
+    mot2TargetPos = counterVal;
   }
 }
 long IslMotorControl::getMotorSpeed(char motor){
   if (motor == (char)0x00){
-    return MOT0_DIR*mot1Speed*COUNTER2CM*SEC_MS / ((float)SPEED_SAMPLE_TIME);
+    return mot1Speed*SEC_MS / ((float)SPEED_SAMPLE_TIME);
   }
   else{
-    return MOT1_DIR*mot2Speed*COUNTER2CM*SEC_MS / ((float)SPEED_SAMPLE_TIME);
+    return mot2Speed*SEC_MS / ((float)SPEED_SAMPLE_TIME);
   }
 }
 void IslMotorControl::setMotorSpeed(char motor, long speed){
   isSpeedPIDActive = true;
 
-  speed = speed*CM2COUNTER*SPEED_SAMPLE_TIME / ((float)SEC_MS);
+  speed = speed*SPEED_SAMPLE_TIME / ((float)SEC_MS);
 
   if (motor == (char)0x00){
-    mot1TargetSpeed = MOT0_DIR*speed;
+    mot1TargetSpeed = speed;
   }
   else{
-    mot2TargetSpeed = MOT1_DIR*speed;
+    mot2TargetSpeed = speed;
   }
 }
 void IslMotorControl::setMotorSpeeds(long speed1, long speed2){
   isSpeedPIDActive = true;
-  mot1TargetSpeed = MOT0_DIR*speed1*CM2COUNTER*SPEED_SAMPLE_TIME / ((float)SEC_MS);
-  mot2TargetSpeed = MOT1_DIR*speed2*CM2COUNTER*SPEED_SAMPLE_TIME / ((float)SEC_MS);
+  mot1TargetSpeed = speed1*SPEED_SAMPLE_TIME / ((float)SEC_MS);
+  mot2TargetSpeed = speed2*SPEED_SAMPLE_TIME / ((float)SEC_MS);
 }
 void IslMotorControl::setMotorCounters(long counter1, long counter2){
   isSpeedPIDActive = false;
-  mot1TargetPos = MOT0_DIR*counter1*CM2COUNTER;
-  mot2TargetPos = MOT1_DIR*counter2*CM2COUNTER;
+  mot1TargetPos = counter1;
+  mot2TargetPos = counter2;
 }
 
 

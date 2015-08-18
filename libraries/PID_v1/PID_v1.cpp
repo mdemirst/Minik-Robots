@@ -59,8 +59,6 @@ bool PID::Compute()
       else if(ITerm < outMin) ITerm = outMin;
       double dInput = (input - lastInput);
  
-      if (ITerm < 0.01)
-        ITerm = 0;
       /*Compute PID Output*/
       double output = kp * error + ITerm - kd * dInput;
       

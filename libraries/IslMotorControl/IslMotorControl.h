@@ -26,8 +26,8 @@
 #define PIN_CNY70_2 40
 #define PIN_CNY70_3 38
 
-#define PIN_MOT1_E1 21 //2
-#define PIN_MOT1_E2 20 //3
+#define PIN_MOT1_E1 20 //2
+#define PIN_MOT1_E2 21 //3
 
 #define PIN_MOT2_E1 19 //4 
 #define PIN_MOT2_E2 18 //5 
@@ -55,18 +55,14 @@
 #define PIN_LED1 10
 #define PIN_LED2 44
 
-#define SPEED_SAMPLE_TIME 50
-#define PID_SAMPLE_TIME 100
+#define SPEED_SAMPLE_TIME 5
+#define PID_SAMPLE_TIME 30
 #define DIST_SENSOR_SAMPLE_TIME 100
-#define PWM_MAX 255
+#define PWM_MAX 250
 
-#define WHEEL_DIAMETER 9  //Wheel diameter is in cm.
-#define COUNTS_PER_ROTATION 12000
-#define COUNTER2CM  0.000213542//-->Ihsan
-#define CM2COUNTER  4682.90//-->Ihsan
-#define SEC_MS      1000
-#define MOT0_DIR    1
-#define MOT1_DIR    -1
+#define SPEED_FILTER_CONST 1.0
+
+#define SEC_MS      1000.0
 
 
 //Receiver Card IDs
@@ -121,7 +117,7 @@
 
 #define PI 3.14159265358979
 
-#define MIN_PWM_LIM 50
+#define MIN_PWM_LIM 120
 
 class IslMotorControl
 {
@@ -156,19 +152,19 @@ class IslMotorControl
 
   public:
     bool   isSpeedPIDActive;
-    double KP_S_1 = 0.00005; // Proportional gain speed 10,2,1
-    double KI_S_1 = 0.000001; // Integration gain
-    double KD_S_1 = 0.000008; // Differential gain 
-    double KP_P_1 = 0.03; //20; // Proportional gain position
-    double KI_P_1 = 0.001; //12; // Integration gain
-    double KD_P_1 = 0.005; //10; // Differential gain
+    double KP_S_1 = 0.005; // Proportional gain speed 10,2,1
+    double KI_S_1 = 0.000; // Integration gain
+    double KD_S_1 = 0.001; // Differential gain 
+    double KP_P_1 = 0.75; //20; // Proportional gain position
+    double KI_P_1 = 0.0; //12; // Integration gain
+    double KD_P_1 = 0.2; //10; // Differential gain
 
-    double KP_S_2 = 0.00005; // Proportional gain speed 10,2,1
-    double KI_S_2 = 0.000001; // Integration gain
-    double KD_S_2 = 0.000008; // Differential gain 
-    double KP_P_2 = 0.03;//20 ; // Proportional gain position
-    double KI_P_2 = 0.001;//12 ; // Integration gain
-    double KD_P_2 = 0.005;//10; // Differential gain
+    double KP_S_2 = 0.005; // Proportional gain speed 10,2,1
+    double KI_S_2 = 0.000; // Integration gain
+    double KD_S_2 = 0.001; // Differential gain 
+    double KP_P_2 = 0.75;//20 ; // Proportional gain position
+    double KI_P_2 = 0.0;//12 ; // Integration gain
+    double KD_P_2 = 0.2;//10; // Differential gain
 
   private:
     unsigned long prevTime;
