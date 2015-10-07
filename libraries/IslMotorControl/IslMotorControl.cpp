@@ -100,11 +100,16 @@ IslMotorControl::IslMotorControl()
 
   mot1PWM = 0;
   mot2PWM = 0;
-
+	
   PIDSpeed1   = new PID(&mot1Speed, &mot1PIDPWMOut, &mot1TargetSpeed, KP_S_1, KI_S_1, KD_S_1, DIRECT);
   PIDPos1     = new PID(&mot1Count, &mot1PIDPWMOut, &mot1TargetPos, KP_P_1, KI_P_1, KD_P_1, DIRECT);
   PIDSpeed2   = new PID(&mot2Speed, &mot2PIDPWMOut, &mot2TargetSpeed, KP_S_2, KI_S_2, KD_S_2, DIRECT);
   PIDPos2     = new PID(&mot2Count, &mot2PIDPWMOut, &mot2TargetPos, KP_P_2, KI_P_2, KD_P_2, DIRECT);
+  
+  setPosParam((char)0x00, INIT_KP_P_1, INIT_KI_P_1, INIT_KD_P_1);
+	setPosParam((char)0x01, INIT_KP_P_2, INIT_KI_P_2, INIT_KD_P_2);
+	setSpeedParam((char)0x00, INIT_KP_S_1, INIT_KI_S_1, INIT_KD_S_1);
+	setSpeedParam((char)0x01, INIT_KP_S_2, INIT_KI_S_2, INIT_KD_S_2);
 
   PIDSpeed1->SetMode(AUTOMATIC);
   PIDSpeed1->SetOutputLimits(-255, 255);
@@ -148,7 +153,6 @@ IslMotorControl::IslMotorControl()
   t = new Timer();
 
   t->every(1, flagUpdate);
-
 }
 
 void IslMotorControl::sendPeriodicCounter()
@@ -265,8 +269,20 @@ void IslMotorControl::speedPIDUpdate()
 void IslMotorControl::posPIDUpdate()
 {
 
-		float PWM_max_adaptive_1 = constrain(PWM_MAX - ((fabs(mot1Speed) * 155) / (2000/200.0)),100,255);
-		float PWM_max_adaptive_2 = constrain(PWM_MAX - ((fabs(mot2Speed) * 155) / (2000/200.0)),100,255);
+	/* Adaptive speed limit is used for controlling the speed in position control mode
+	 * When position control is enabled, speed cannot be controlled and
+	 * sometimes speed increases too much and it may not possible to stop motor
+	 * immediately when speed is high. Therefore, we limit PWM
+	 * so that less torque applied when speed is high.
+	 * PWM_out |__
+	 *         |  \
+	 *         |   \ <--- PWM limit is set inversely prop to speed
+	 *         |    \___
+	 *         |__________
+	 *                   Speed
+	 */
+	float PWM_max_adaptive_1 = constrain(PWM_MAX - (fabs(mot1Speed) * ADAPTIVE_SPEED_MULTIPLIER),PWM_MIN,PWM_MAX);
+	float PWM_max_adaptive_2 = constrain(PWM_MAX - (fabs(mot2Speed) * ADAPTIVE_SPEED_MULTIPLIER),PWM_MIN,PWM_MAX);
 
     PIDPos1->Compute();
     mot1PWM = constrain(mot1PIDPWMOut, -1 * PWM_max_adaptive_1, PWM_max_adaptive_1);
@@ -360,41 +376,41 @@ void IslMotorControl::updateMotors()
 void IslMotorControl::getSpeedParam(char motor, int* param){
 
   if (motor == (char)0x00){
-    param[0] = KP_S_1;
-    param[1] = KI_S_1;
-    param[2] = KD_S_1;
+    param[0] = KP_S_1*1000.0;
+    param[1] = KI_S_1*1000.0;
+    param[2] = KD_S_1*1000.0;
   }
   else{
-    param[0] = KP_S_2;
-    param[1] = KI_S_2;
-    param[2] = KD_S_2;
+    param[0] = KP_S_2*1000.0;
+    param[1] = KI_S_2*1000.0;
+    param[2] = KD_S_2*1000.0;
   }
 
 }
 void IslMotorControl::getPosParam(char motor, int* param){
 
   if (motor == (char)0x00){
-    param[0] = KP_P_1;
-    param[1] = KI_P_1;
-    param[2] = KD_P_1;
+    param[0] = KP_P_1*1000.0;
+    param[1] = KI_P_1*1000.0;
+    param[2] = KD_P_1*1000.0;
   }
   else{
-    param[0] = KP_P_2;
-    param[1] = KI_P_2;
-    param[2] = KD_P_2;
+    param[0] = KP_P_2*1000.0;
+    param[1] = KI_P_2*1000.0;
+    param[2] = KD_P_2*1000.0;
   }
 }
 void IslMotorControl::setSpeedParam(char motor, int p, int i, int d){
   if (motor == (char)0x00){
-    KP_S_1 = p;
-    KI_S_1 = i;
-    KD_S_1 = d;
+    KP_S_1 = p/1000.0;
+    KI_S_1 = i/1000.0;
+    KD_S_1 = d/1000.0;
     PIDSpeed1->SetTunings(KP_S_1, KI_S_1, KD_S_1);
   }
   else{
-    KP_S_2 = p;
-    KI_S_2 = i;
-    KD_S_2 = d;
+    KP_S_2 = p/1000.0;
+    KI_S_2 = i/1000.0;
+    KD_S_2 = d/1000.0;
     PIDSpeed2->SetTunings(KP_S_2, KI_S_2, KD_S_2);
   }
 }
@@ -479,8 +495,6 @@ void IslMotorControl::respondPack(char* pack) {
     // do the task
     // getSpeed command
     if (getPackedTask(pack) == (char)CMD_GET_SPEED) {
-      //get speed
-      //temp = (long) getSpeed(pack[PROTOCOL_DATA_POS]);
       temp = (long)getMotorSpeed(pack[PROTOCOL_MOTOR_POS]);
 
       int tempInt;
@@ -496,7 +510,6 @@ void IslMotorControl::respondPack(char* pack) {
 
     // setSpeed command
     else if (getPackedTask(pack) == (char)CMD_SET_SPEED) {
-
       // setSpeed
       setMotorSpeed(pack[PROTOCOL_MOTOR_POS],
         (int)(((((int)pack[PROTOCOL_DATA_POS + 1]) << 8) & 0xFF00) | ((((int)pack[PROTOCOL_DATA_POS + 2])) & 0x00FF)));
@@ -507,8 +520,6 @@ void IslMotorControl::respondPack(char* pack) {
 
     // getMotorCounter command
     else if (getPackedTask(pack) == (char)CMD_GET_COUNTER) {
-      // getMotorCounter
-      //temp = (long) getMotorCounter(pack[PROTOCOL_DATA_POS]);
       temp = (long)getMotorCounter(pack[PROTOCOL_MOTOR_POS]);
 
       pack[PROTOCOL_DATA_POS + 1] = char(temp >> 24);
@@ -520,14 +531,6 @@ void IslMotorControl::respondPack(char* pack) {
 
     // setMotorCounter command
     else if (getPackedTask(pack) == (char)CMD_SET_COUNTER) {
-
-      // setMotorCounter
-      //setCounter( pack[PROTOCOL_DATA_POS], (long)(
-      //  ((long) pack[PROTOCOL_DATA_POS + 1] << 24) +
-      //  ((long) pack[PROTOCOL_DATA_POS + 2] << 16) + 
-      //  ((long) pack[PROTOCOL_DATA_POS + 3] << 8) + 
-      //  ((long) pack[PROTOCOL_DATA_POS + 4])));
-
       
       setMotorCounter(pack[PROTOCOL_MOTOR_POS], (long)(
         ((((long)pack[PROTOCOL_DATA_POS + 1]) << 24) & 0xFF000000) |
@@ -540,9 +543,6 @@ void IslMotorControl::respondPack(char* pack) {
 
     // get speed PID Coef command
     else if (getPackedTask(pack) == (char)CMD_GET_SPEED_PID) {
-      // getPIDCoef, for speed PID
-      //getSpeedPIDCoef(pack[PROTOCOL_DATA_POS], tempArray);
-
       getSpeedParam(pack[PROTOCOL_DATA_POS], tempIntArray);
 
       pack[PROTOCOL_DATA_POS + 1] = (char)tempIntArray[0];
@@ -563,9 +563,6 @@ void IslMotorControl::respondPack(char* pack) {
     }
     // get position PID Coef command
     else if (getPackedTask(pack) == (char)CMD_GET_POS_PID) {
-      // getPIDCoef, for position PID
-      //getPositionPIDCoef(pack[PROTOCOL_DATA_POS], tempArray);
-
       getPosParam(pack[PROTOCOL_DATA_POS], tempIntArray);
 
       pack[PROTOCOL_DATA_POS + 1] = (char)tempIntArray[0];
@@ -579,40 +576,13 @@ void IslMotorControl::respondPack(char* pack) {
       tempArray[0] = pack[PROTOCOL_DATA_POS + 1];
       tempArray[1] = pack[PROTOCOL_DATA_POS + 2];
       tempArray[2] = pack[PROTOCOL_DATA_POS + 3];
-      //setPositionPIDCoef(pack[PROTOCOL_DATA_POS], tempArray);
 
       setPosParam(pack[PROTOCOL_DATA_POS], tempArray[0], tempArray[1], tempArray[2]);
       packetLength = 1;
     }
 
-    // getTMOD1, gets the speed PID update rate
-    else if (getPackedTask(pack) == (char)CMD_GET_TMOD1) {
-      // getTMOD1, gets the speed PID update rate
-      //pack[PROTOCOL_DATA_POS] = getTMOD1();
-      packetLength = 1;
-    }
-
-    // setTMOD1, sets the speed PID update rate
-    else if (getPackedTask(pack) == (char)CMD_SET_TMOD1) {
-      // setTMOD1, sets the speed PID update rate
-      //setTMOD1(pack[PROTOCOL_DATA_POS]);
-    }
-
     // setMotorCounters command
     else if (getPackedTask(pack) == (char)CMD_SET_COUNTERS) {
-      // enable position PID
-      //enablePositionPID();
-      // setMotorCounter
-      //setCounters((long)((
-      //  ((long) pack[PROTOCOL_DATA_POS] << 24) +
-      //  ((long) pack[PROTOCOL_DATA_POS + 1] << 16) + 
-      //  ((long) pack[PROTOCOL_DATA_POS + 2] << 8) + 
-      //  ((long) pack[PROTOCOL_DATA_POS + 3]))),
-      //  (long)(((long) pack[PROTOCOL_DATA_POS + 4] << 24) +
-      //  ((long) pack[PROTOCOL_DATA_POS + 5] << 16) + 
-      //  ((long) pack[PROTOCOL_DATA_POS + 6] << 8) + 
-      //  ((long) pack[PROTOCOL_DATA_POS + 7])));
-      
       setMotorCounter((char)0x00, (long)(
         ((((long)pack[PROTOCOL_DATA_POS + 0]) << 24) & 0xFF000000) |
         ((((long)pack[PROTOCOL_DATA_POS + 1]) << 16) & 0x00FF0000) |
@@ -634,12 +604,9 @@ void IslMotorControl::respondPack(char* pack) {
       setMotorSpeed((char)0x00,
         (int)(((((int)pack[PROTOCOL_DATA_POS + 0]) << 8)&0xFF00) | ((((int)pack[PROTOCOL_DATA_POS + 1]))&0x00FF) ));
 
-        
-
       setMotorSpeed((char)0x01,
         (int)(((((int)pack[PROTOCOL_DATA_POS + 2]) << 8) & 0xFF00) | ((((int)pack[PROTOCOL_DATA_POS + 3])) & 0x00FF)));
        
-
       packetLength = 1;
     }
 	

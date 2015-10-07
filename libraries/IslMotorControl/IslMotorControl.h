@@ -58,6 +58,8 @@
 #define SPEED_SAMPLE_TIME 5
 #define PID_SAMPLE_TIME 30
 #define DIST_SENSOR_SAMPLE_TIME 100
+#define ADAPTIVE_SPEED_MULTIPLIER 15
+#define PWM_MIN 100
 #define PWM_MAX 250
 
 #define SPEED_FILTER_CONST 1.0
@@ -119,10 +121,26 @@
 
 #define MIN_PWM_LIM 120
 
+// Initial PID values
+#define INIT_KP_S_1 5	// Proportional gain speed 10,2,1
+#define INIT_KI_S_1 0 	// Integration gain
+#define INIT_KD_S_1 1 	// Differential gain 
+#define INIT_KP_P_1 750 // Proportional gain position
+#define INIT_KI_P_1 0 	// Integration gain
+#define INIT_KD_P_1 200 // Differential gain
+
+#define INIT_KP_S_2 5 	// Proportional gain speed 10,2,1
+#define INIT_KI_S_2 0 	// Integration gain
+#define INIT_KD_S_2 1 	// Differential gain 
+#define INIT_KP_P_2 750 // Proportional gain position
+#define INIT_KI_P_2 0 	// Integration gain
+#define INIT_KD_P_2 200 // Differential gain
+
+
 class IslMotorControl
 {
   public:
-	  Encoder *mot1Enc;
+	Encoder *mot1Enc;
     Encoder *mot2Enc;
 
     long mot1Speed;
@@ -152,19 +170,19 @@ class IslMotorControl
 
   public:
     bool   isSpeedPIDActive;
-    double KP_S_1 = 0.005; // Proportional gain speed 10,2,1
-    double KI_S_1 = 0.000; // Integration gain
-    double KD_S_1 = 0.001; // Differential gain 
-    double KP_P_1 = 0.75; //20; // Proportional gain position
-    double KI_P_1 = 0.0; //12; // Integration gain
-    double KD_P_1 = 0.2; //10; // Differential gain
+    double KP_S_1;
+    double KI_S_1;
+    double KD_S_1;
+    double KP_P_1;
+    double KI_P_1;
+    double KD_P_1;
 
-    double KP_S_2 = 0.005; // Proportional gain speed 10,2,1
-    double KI_S_2 = 0.000; // Integration gain
-    double KD_S_2 = 0.001; // Differential gain 
-    double KP_P_2 = 0.75;//20 ; // Proportional gain position
-    double KI_P_2 = 0.0;//12 ; // Integration gain
-    double KD_P_2 = 0.2;//10; // Differential gain
+    double KP_S_2;
+    double KI_S_2;
+    double KD_S_2;
+    double KP_P_2;
+    double KI_P_2;
+    double KD_P_2;
 
   private:
     unsigned long prevTime;

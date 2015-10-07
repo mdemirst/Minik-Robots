@@ -108,6 +108,7 @@ void loop()
     mot.jobDone10ms();
     float a = 1;
     mot.setMotorCounters(a*10000,-10000*a);
+    //mot.setMotorSpeeds(3000,-3000);
   }
   if(mot.job100ms() == true)  //This block is guaranteed to be called in every 100ms
   {
