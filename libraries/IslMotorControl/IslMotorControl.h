@@ -66,6 +66,9 @@
 
 #define SEC_MS      1000.0
 
+#define SPEED_PID_DIVIDER 1000.0
+#define POS_PID_DIVIDER 100.0
+
 
 //Receiver Card IDs
 #define REC_CARD1 0x06
@@ -125,16 +128,16 @@
 #define INIT_KP_S_1 5	// Proportional gain speed 10,2,1
 #define INIT_KI_S_1 0 	// Integration gain
 #define INIT_KD_S_1 1 	// Differential gain 
-#define INIT_KP_P_1 750 // Proportional gain position
+#define INIT_KP_P_1 75  // Proportional gain position
 #define INIT_KI_P_1 0 	// Integration gain
-#define INIT_KD_P_1 200 // Differential gain
+#define INIT_KD_P_1 20  // Differential gain
 
 #define INIT_KP_S_2 5 	// Proportional gain speed 10,2,1
 #define INIT_KI_S_2 0 	// Integration gain
 #define INIT_KD_S_2 1 	// Differential gain 
-#define INIT_KP_P_2 750 // Proportional gain position
+#define INIT_KP_P_2 75  // Proportional gain position
 #define INIT_KI_P_2 0 	// Integration gain
-#define INIT_KD_P_2 200 // Differential gain
+#define INIT_KD_P_2 20  // Differential gain
 
 
 class IslMotorControl

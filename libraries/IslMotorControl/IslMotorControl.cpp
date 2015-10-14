@@ -376,55 +376,55 @@ void IslMotorControl::updateMotors()
 void IslMotorControl::getSpeedParam(char motor, int* param){
 
   if (motor == (char)0x00){
-    param[0] = KP_S_1*1000.0;
-    param[1] = KI_S_1*1000.0;
-    param[2] = KD_S_1*1000.0;
+    param[0] = KP_S_1*SPEED_PID_DIVIDER;
+    param[1] = KI_S_1*SPEED_PID_DIVIDER;
+    param[2] = KD_S_1*SPEED_PID_DIVIDER;
   }
   else{
-    param[0] = KP_S_2*1000.0;
-    param[1] = KI_S_2*1000.0;
-    param[2] = KD_S_2*1000.0;
+    param[0] = KP_S_2*SPEED_PID_DIVIDER;
+    param[1] = KI_S_2*SPEED_PID_DIVIDER;
+    param[2] = KD_S_2*SPEED_PID_DIVIDER;
   }
 
 }
 void IslMotorControl::getPosParam(char motor, int* param){
 
   if (motor == (char)0x00){
-    param[0] = KP_P_1*1000.0;
-    param[1] = KI_P_1*1000.0;
-    param[2] = KD_P_1*1000.0;
+    param[0] = KP_P_1*POS_PID_DIVIDER;
+    param[1] = KI_P_1*POS_PID_DIVIDER;
+    param[2] = KD_P_1*POS_PID_DIVIDER;
   }
   else{
-    param[0] = KP_P_2*1000.0;
-    param[1] = KI_P_2*1000.0;
-    param[2] = KD_P_2*1000.0;
+    param[0] = KP_P_2*POS_PID_DIVIDER;
+    param[1] = KI_P_2*POS_PID_DIVIDER;
+    param[2] = KD_P_2*POS_PID_DIVIDER;
   }
 }
 void IslMotorControl::setSpeedParam(char motor, int p, int i, int d){
   if (motor == (char)0x00){
-    KP_S_1 = p/1000.0;
-    KI_S_1 = i/1000.0;
-    KD_S_1 = d/1000.0;
+    KP_S_1 = p/SPEED_PID_DIVIDER;
+    KI_S_1 = i/SPEED_PID_DIVIDER;
+    KD_S_1 = d/SPEED_PID_DIVIDER;
     PIDSpeed1->SetTunings(KP_S_1, KI_S_1, KD_S_1);
   }
   else{
-    KP_S_2 = p/1000.0;
-    KI_S_2 = i/1000.0;
-    KD_S_2 = d/1000.0;
+    KP_S_2 = p/SPEED_PID_DIVIDER;
+    KI_S_2 = i/SPEED_PID_DIVIDER;
+    KD_S_2 = d/SPEED_PID_DIVIDER;
     PIDSpeed2->SetTunings(KP_S_2, KI_S_2, KD_S_2);
   }
 }
 void IslMotorControl::setPosParam(char motor, int p, int i, int d){
   if (motor == (char)0x00){
-    KP_P_1 = p/1000.0;
-    KI_P_1 = i/1000.0;
-    KD_P_1 = d/1000.0;
+    KP_P_1 = p/POS_PID_DIVIDER;
+    KI_P_1 = i/POS_PID_DIVIDER;
+    KD_P_1 = d/POS_PID_DIVIDER;
     PIDPos1->SetTunings(KP_P_1, KI_P_1, KD_P_1);
   }
   else{
-    KP_P_2 = p/1000.0;
-    KI_P_2 = i/1000.0;
-    KD_P_2 = d/1000.0;
+    KP_P_2 = p/POS_PID_DIVIDER;
+    KI_P_2 = i/POS_PID_DIVIDER;
+    KD_P_2 = d/POS_PID_DIVIDER;
     PIDPos2->SetTunings(KP_P_2, KI_P_2, KD_P_2);
   }
 }
@@ -641,18 +641,17 @@ void IslMotorControl::respondPack(char* pack) {
     }
 
     // set the header of the pack
-    tempArray[0] = DEVICEID; //getPackedSender(pack);    
+    tempArray[0] = DEVICEID; 
     tempArray[1] = 0x00;
     tempArray[2] = 0x00;
     setPackHeader(pack, getPackedTask(pack),
       packetLength + PROTOCOL_CONTROL_SIZE
       + PROTOCOL_N_FOOTER, tempArray);
+      
     // recalculate the check sums
     refreshPack(pack);
 
     // send the pack
-
-    //sendBuffer.clear();
     Serial.write(pack, packetLength + PROTOCOL_CONTROL_SIZE + PROTOCOL_N_FOOTER);
 
   }
