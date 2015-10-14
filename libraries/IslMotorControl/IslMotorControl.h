@@ -1,13 +1,16 @@
-/*
-  IslMotorControl.h
-  
-  Contains methods for controlling 2 motors, sharp sensors, CNY70 sensors, buttons and leds.
-  
-  Author: Mahmut Demir
-  Date: 11.02.2015
-  E-Mail: mahmutdemir@gmail.com
-  
-*/
+/*****************************************************************************
+** PROJECT-NAME: ISL MOTOR CONTROL
+** This projected is licensed under the terms of the MIT license
+** Copyright (c) 2015, ISL
+** All rights reserved.
+**
+******************************************************************************
+** FILENAME:    IslMotorControl.h
+** AUTHOR(S):   Mahmut Demir <mahmutdemir@gmail.com>
+** DESCRIPTION: This file provides functions for controlling arduino based
+* 				motor control card. Also contains some functions to use Minik
+* 				robot hardware.
+*****************************************************************************/
 #ifndef ISL_MOTOR_CONTROL_H
 #define ISL_MOTOR_CONTROL_H
 
@@ -17,20 +20,20 @@
 #include <Encoder.h>
 #include <ByteBuffer.h>
 
-#define USE_SERIAL2 1
-#define USE_SERIAL3 1
+#define USE_SERIAL2 0 //Arduino MEGA has 3 serial ports
+#define USE_SERIAL3 0 //If you want to use others too, set them true
 
 #define SERIAL_BAUDRATE 19200
 
-#define PIN_CNY70_1 42
+#define PIN_CNY70_1 42 //Line follower sensors pins
 #define PIN_CNY70_2 40
 #define PIN_CNY70_3 38
 
-#define PIN_MOT1_E1 20 //2
-#define PIN_MOT1_E2 21 //3
+#define PIN_MOT1_E1 20 //Encoder pins
+#define PIN_MOT1_E2 21
 
-#define PIN_MOT2_E1 19 //4 
-#define PIN_MOT2_E2 18 //5 
+#define PIN_MOT2_E1 19 //Encoder pins
+#define PIN_MOT2_E2 18
 
 #define PIN_MOT1_PWM   3    //Motor 1 PWM pin
 #define PIN_MOT1_BRAKE 9    //Motor 1 brake pin
@@ -45,31 +48,33 @@
 #define PIN_TX3 14
 #define PIN_RX3 15
 
-#define PIN_SHARP1 A8
+#define PIN_SHARP1 A8 //Distance sensor pins
 #define PIN_SHARP2 A9
 
-#define PIN_BTN1 52
+#define PIN_BTN1 52 //Button pins at control panel
 #define PIN_BTN2 50
 #define PIN_BTN3 48
 
-#define PIN_LED1 10
+#define PIN_LED1 10 //Led pins at control panel
 #define PIN_LED2 44
 
+// PWM and Motor control related definitions
 #define SPEED_SAMPLE_TIME 5
 #define PID_SAMPLE_TIME 30
 #define DIST_SENSOR_SAMPLE_TIME 100
 #define ADAPTIVE_SPEED_MULTIPLIER 15
 #define PWM_MIN 100
 #define PWM_MAX 250
-
 #define SPEED_FILTER_CONST 1.0
-
 #define SEC_MS      1000.0
-
 #define SPEED_PID_DIVIDER 1000.0
 #define POS_PID_DIVIDER 100.0
+#define MIN_PWM_LIM 120
+#define PI 3.14159265358979
+#define CM_2_COUNTS 106
 
 
+//Communication related definitions
 //Receiver Card IDs
 #define REC_CARD1 0x06
 #define REC_CARD2 0x07
@@ -84,7 +89,6 @@
 #define PROTOCOL_MOTOR_POS 9
 #define PROTOCOL_N_FOOTER  3
 #define PROTOCOL_STOP      0xAA
-
 #define PROTOCOL_TIMEOUT      0xFF
 #define PROTOCOL_PACK_SIZE    25
 #define PROTOCOL_CONTROL_SIZE 9
@@ -110,29 +114,23 @@
 #define CMD_GET_LINES     0x18	//Get line follower sensor information in order Right-Middle-Left
 
 #define PACKET_RECEIVED   0x00
-
 #define SUCCESS 0xFF
 #define FAIL    0x00
-
 #define TIMEOUT_VAL 1000
-
 #define RECV_START_BYTES  0x00
 #define RECV_HEADER_BYTES 0x01
 #define RECV_DATA_BYTES   0x02
 
-#define PI 3.14159265358979
-
-#define MIN_PWM_LIM 120
 
 // Initial PID values
-#define INIT_KP_S_1 5	// Proportional gain speed 10,2,1
+#define INIT_KP_S_1 5	// Proportional gain speed
 #define INIT_KI_S_1 0 	// Integration gain
 #define INIT_KD_S_1 1 	// Differential gain 
 #define INIT_KP_P_1 75  // Proportional gain position
 #define INIT_KI_P_1 0 	// Integration gain
 #define INIT_KD_P_1 20  // Differential gain
 
-#define INIT_KP_S_2 5 	// Proportional gain speed 10,2,1
+#define INIT_KP_S_2 5 	// Proportional gain speed
 #define INIT_KI_S_2 0 	// Integration gain
 #define INIT_KD_S_2 1 	// Differential gain 
 #define INIT_KP_P_2 75  // Proportional gain position
@@ -195,15 +193,12 @@ class IslMotorControl
     PID* PIDPos1;
     PID* PIDSpeed2;
     PID* PIDPos2;
-
     float  mot1PIDPWMOut;
     float  mot2PIDPWMOut;
-
     long PIDSetSpeed1;
     long PIDSetSpeed2;
     long PIDSetPos1;
     long PIDSetPos2;
-
     void speedPIDUpdate();
     void posPIDUpdate();
 
@@ -231,8 +226,10 @@ class IslMotorControl
     void jobDone1000ms();
 
   public:
+    IslMotorControl();
     void toggleYellow();
     void toggleGreen();
+    void updateMotors();
     
     Timer* t;
 
@@ -250,23 +247,14 @@ class IslMotorControl
     long count2Cm(long count);
     long cm2Count(long cm);
 
-  public:
-    //Current card id
+  private:
+    double zeroAbsorb(double val);
     char DEVICEID = char(REC_CARD1);
-
     ByteBuffer sendBuffer;
     char pack[PROTOCOL_PACK_SIZE];
-
     char recvState = char(RECV_START_BYTES);
     int nrRecvdBytes = 0;
     long lastRecvTime = 0;
-
-  private:
-    double zeroAbsorb(double val);
-
-  public:
-    IslMotorControl();
-    void updateMotors();
 };
 
 #endif

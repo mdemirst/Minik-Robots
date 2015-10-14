@@ -1,6 +1,6 @@
 /////////////////////////////////////////////////////////////
 // @Author: Mahmut Demir - mahmutdemir@gmail.com
-// @Last update: 14.04.2015
+// @Last update: 13.10.2015
 // @Description: ISL Motor Control Card
 //               Arduino sources codes
 //               Written for Arduino Mega 2560 with motor shield
@@ -52,14 +52,19 @@
 //   long getMotorCounter(char motor);
 //   long getMotorSpeed(char motor);
 //   void setMotorCounter(char motor, long counter);
-//   void setMotorSpeed(char motor, long speed);
+//   void setMotorSpeed(char motor, long speed); Speed in counts/sec
 //   void setMotorSpeeds(long speed1, long speed2);
 //   void setMotorCounters(long counter1, long counter2);
+//   long count2Cm(long counts); Get encoder counts in CM 
+//                               (You need to set COUNTS_2_CM accordingly
+//                                in IslMotorControl.h)
+//   long cm2Count(long cm);
 //
 // --> Variables: You can read state of robot from variables directly.
 //  distSensorL, distSensorR: Distance sensor reads
 //  mot1Count, mot2Count:     Current counter values;(long) for left and right motor
 //  mot1Speed, mot2Speed:     Current speed values(long) for left and right motor
+//  lineR, lineM, lineL:      Line following sensor readings
 //
 // --> Serial Ports: 
 //  By default first serial port is set to 19200 bps and don't change it.
@@ -105,18 +110,21 @@ void loop()
   }
   if(mot.job10ms() == true)  //This block is guaranteed to be called in every 10ms
   {
-    //mot.jobDone10ms();
-    //float a = 1;
-    //mot.setMotorCounters(a*10000,-10000*a);
+    mot.jobDone10ms();
+    //Example functions
+    //mot.setMotorCounters(10000,-10000);
     //mot.setMotorSpeeds(3000,-3000);
+    
   }
   if(mot.job100ms() == true)  //This block is guaranteed to be called in every 100ms
   {
-    
-    //Serial.print(mot.mot1Count);
+    //Print counters in CM - this is only used for debugging purpose. Writing dummy data
+    //to serial port breaks the communication with computers
+    //Serial.println(mot.count2Cm(mot.mot1Count));
     //Serial.print(" ");
-    //Serial.println(mot.mot2Count);
-    
+    //Serial.println(mot.count2Cm(mot.mot2Count));
+
+    //This function is only used for robotic arm control
     //mot.sendPeriodicCounter();
     mot.jobDone100ms();
   }

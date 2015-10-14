@@ -1,3 +1,17 @@
+/*****************************************************************************
+** PROJECT-NAME: ISL MOTOR CONTROL
+** This projected is licensed under the terms of the MIT license
+** Copyright (c) 2015, ISL
+** All rights reserved.
+**
+******************************************************************************
+** FILENAME:    IslMotorControl.cpp
+** AUTHOR(S):   Mahmut Demir <mahmutdemir@gmail.com>
+** DESCRIPTION: This file provides functions for controlling arduino based
+* 				motor control card. Also contains some functions to use Minik
+* 				robot hardware.
+*****************************************************************************/
+
 #include "Arduino.h"
 #include "IslMotorControl.h"
 
@@ -107,7 +121,7 @@ IslMotorControl::IslMotorControl()
   PIDPos2     = new PID(&mot2Count, &mot2PIDPWMOut, &mot2TargetPos, KP_P_2, KI_P_2, KD_P_2, DIRECT);
   
   setPosParam((char)0x00, INIT_KP_P_1, INIT_KI_P_1, INIT_KD_P_1);
-	setPosParam((char)0x01, INIT_KP_P_2, INIT_KI_P_2, INIT_KD_P_2);
+  setPosParam((char)0x01, INIT_KP_P_2, INIT_KI_P_2, INIT_KD_P_2);
 	setSpeedParam((char)0x00, INIT_KP_S_1, INIT_KI_S_1, INIT_KD_S_1);
 	setSpeedParam((char)0x01, INIT_KP_S_2, INIT_KI_S_2, INIT_KD_S_2);
 
@@ -155,10 +169,10 @@ IslMotorControl::IslMotorControl()
   t->every(1, flagUpdate);
 }
 
+//This function is used only for robotic arm control
 void IslMotorControl::sendPeriodicCounter()
 {
-  int packetLength = 5 + PROTOCOL_CONTROL_SIZE
-      + PROTOCOL_N_FOOTER;
+  int packetLength = 5 + PROTOCOL_CONTROL_SIZE + PROTOCOL_N_FOOTER;
   char pack[30];
 
   pack[0] = PROTOCOL_START_0;
@@ -281,8 +295,10 @@ void IslMotorControl::posPIDUpdate()
 	 *         |__________
 	 *                   Speed
 	 */
-	float PWM_max_adaptive_1 = constrain(PWM_MAX - (fabs(mot1Speed) * ADAPTIVE_SPEED_MULTIPLIER),PWM_MIN,PWM_MAX);
-	float PWM_max_adaptive_2 = constrain(PWM_MAX - (fabs(mot2Speed) * ADAPTIVE_SPEED_MULTIPLIER),PWM_MIN,PWM_MAX);
+	float PWM_max_adaptive_1 = constrain(PWM_MAX - (fabs(mot1Speed) 
+														* ADAPTIVE_SPEED_MULTIPLIER),PWM_MIN,PWM_MAX);
+	float PWM_max_adaptive_2 = constrain(PWM_MAX - (fabs(mot2Speed) 
+														* ADAPTIVE_SPEED_MULTIPLIER),PWM_MIN,PWM_MAX);
 
     PIDPos1->Compute();
     mot1PWM = constrain(mot1PIDPWMOut, -1 * PWM_max_adaptive_1, PWM_max_adaptive_1);
@@ -512,7 +528,8 @@ void IslMotorControl::respondPack(char* pack) {
     else if (getPackedTask(pack) == (char)CMD_SET_SPEED) {
       // setSpeed
       setMotorSpeed(pack[PROTOCOL_MOTOR_POS],
-        (int)(((((int)pack[PROTOCOL_DATA_POS + 1]) << 8) & 0xFF00) | ((((int)pack[PROTOCOL_DATA_POS + 2])) & 0x00FF)));
+        (int)(((((int)pack[PROTOCOL_DATA_POS + 1]) << 8) & 0xFF00) 
+						| ((((int)pack[PROTOCOL_DATA_POS + 2])) & 0x00FF)));
 
       packetLength = 1;
 
@@ -602,10 +619,12 @@ void IslMotorControl::respondPack(char* pack) {
     else if (getPackedTask(pack) == (char)CMD_SET_SPEEDS) {
 
       setMotorSpeed((char)0x00,
-        (int)(((((int)pack[PROTOCOL_DATA_POS + 0]) << 8)&0xFF00) | ((((int)pack[PROTOCOL_DATA_POS + 1]))&0x00FF) ));
+        (int)(((((int)pack[PROTOCOL_DATA_POS + 0]) << 8)&0xFF00) 
+						| ((((int)pack[PROTOCOL_DATA_POS + 1]))&0x00FF) ));
 
       setMotorSpeed((char)0x01,
-        (int)(((((int)pack[PROTOCOL_DATA_POS + 2]) << 8) & 0xFF00) | ((((int)pack[PROTOCOL_DATA_POS + 3])) & 0x00FF)));
+        (int)(((((int)pack[PROTOCOL_DATA_POS + 2]) << 8) & 0xFF00) 
+						| ((((int)pack[PROTOCOL_DATA_POS + 3])) & 0x00FF)));
        
       packetLength = 1;
     }
@@ -842,4 +861,14 @@ void IslMotorControl::toggleGreen()
   {
     digitalWrite(PIN_LED2, HIGH);
   }
+}
+
+long IslMotorControl::cm2Count(long cm)
+{
+	return cm*CM_2_COUNTS;
+}
+
+long IslMotorControl::count2Cm(long counts)
+{
+	return counts/CM_2_COUNTS;
 }
