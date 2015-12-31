@@ -55,13 +55,15 @@
 #define PIN_BTN2 50
 #define PIN_BTN3 48
 
-#define PIN_LED1 10 //Led pins at control panel
+#define PIN_LED1 46 //Led pins at control panel
 #define PIN_LED2 44
 
 // PWM and Motor control related definitions
 #define SPEED_SAMPLE_TIME 5
 #define PID_SAMPLE_TIME 30
 #define DIST_SENSOR_SAMPLE_TIME 100
+#define PER_SEND_TIME 50
+#define BUTTON_SEND_TIME 50
 #define ADAPTIVE_SPEED_MULTIPLIER 15
 #define PWM_MIN 100
 #define PWM_MAX 250
@@ -112,6 +114,25 @@
 #define CMD_SET_SPEEDS    0x16
 #define CMD_GET_DISTS     0x17	//Get sharp distance sensor information in order Right-Left
 #define CMD_GET_LINES     0x18	//Get line follower sensor information in order Right-Middle-Left
+#define CMD_GET_LED		  0x19
+#define CMD_SET_LED		  0x20
+#define CMD_GET_BUTTON	  0x21
+#define CMD_GET_CONFIG	  0x22
+#define CMD_SET_CONFIG	  0x23
+
+#define CONFIG_SEND_SPEED 0
+#define CONFIG_SEND_POS   1
+#define CONFIG_SEND_FREQ1 2
+#define CONFIG_SEND_FREQ2 3
+#define CONFIG_SEND_FREQ3 4
+
+#define INIT_SEND_SPEED   0
+#define INIT_SEND_POS     1
+#define INIT_SEND_FREQ1   1
+#define INIT_SEND_FREQ2   1
+#define INIT_SEND_FREQ3   1
+
+
 
 #define PACKET_RECEIVED   0x00
 #define SUCCESS 0xFF
@@ -168,6 +189,11 @@ class IslMotorControl
 	int lineR;
 	int lineM;
 	int lineL;
+	
+	int config;
+	int sendSpeedPeriodic; 
+	int sendPosPeriodic; 
+	int periodicSendFreq;
 
   public:
     bool   isSpeedPIDActive;
@@ -189,6 +215,8 @@ class IslMotorControl
     unsigned long prevTime;
     unsigned long prevPIDTime;
     unsigned long prevSensorTime;
+    unsigned long prevPerSendTime;
+    unsigned long prevButtonSendTime;
     PID* PIDSpeed1;
     PID* PIDPos1;
     PID* PIDSpeed2;
@@ -214,6 +242,10 @@ class IslMotorControl
     void setMotorSpeeds(long speed1, long speed2);
     void setMotorCounters(long counter1, long counter2);
 	void sendPeriodicCounter();
+	void sendMotorSpeeds();
+	void sendMotorPositions();
+	void sendButtonStatus();
+	void readConfig(int newConfig);
 
   public:
     bool job1ms();

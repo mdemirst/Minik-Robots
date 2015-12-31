@@ -87,6 +87,8 @@ IslMotorControl mot;  //Initialize motor control class.
                       //do not forget to call them by prefixing "mot."
                       //Ex: mot.toggleYellow();
                       //    mot.mot2Speed;
+
+boolean showDemo = false;
 void setup()
 {
   pinMode(10, OUTPUT);
@@ -114,15 +116,55 @@ void loop()
     //Example functions
     //mot.setMotorCounters(10000,-10000);
     //mot.setMotorSpeeds(3000,-3000);
+//
+//    if(digitalRead(PIN_BTN1)==LOW && showDemo == false)
+//    {
+//      showDemo = true;
+//      while(digitalRead(PIN_BTN1)==LOW){}
+//    }
+//
+//
+//    if(digitalRead(PIN_BTN2))
+//    {
+//      digitalWrite(PIN_LED1,LOW);
+//    }
+//    else
+//    {
+//      digitalWrite(PIN_LED1,HIGH);    
+//    }
+//
+//    if(digitalRead(PIN_BTN3))
+//    {
+//      digitalWrite(PIN_LED2,LOW);
+//    }
+//    else
+//    {
+//      digitalWrite(PIN_LED2,HIGH);    
+//    }
+
     
   }
   if(mot.job100ms() == true)  //This block is guaranteed to be called in every 100ms
   {
     //Print counters in CM - this is only used for debugging purpose. Writing dummy data
     //to serial port breaks the communication with computers
-    //Serial.println(mot.count2Cm(mot.mot1Count));
-    //Serial.print(" ");
-    //Serial.println(mot.count2Cm(mot.mot2Count));
+//    Serial.print("M1: ");
+//    Serial.print(mot.mot1Count);
+//    Serial.print(" ");
+//    Serial.print("M2: ");
+//    Serial.print(mot.mot2Count);
+//    Serial.print(" ");
+//    Serial.print("DL: ");
+//    Serial.print(mot.distSensorL);
+//    Serial.print(" ");
+//    Serial.print("DR: ");
+//    Serial.println(mot.distSensorR);
+
+//    if(showDemo)
+//    {
+//      mot.setMotorCounters(mot.cm2Count(100),mot.cm2Count(100));
+//      showDemo = false;
+//    }
 
     //This function is only used for robotic arm control
     //mot.sendPeriodicCounter();
@@ -130,7 +172,9 @@ void loop()
   }
   if(mot.job1000ms() == true)  //This block is guaranteed to be called in every 1 sec
   {
+    //Serial.println(mot.config);
     //mot.toggleYellow();
+    //mot.toggleGreen();
     mot.jobDone1000ms();
   }
   
