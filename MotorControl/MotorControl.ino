@@ -116,7 +116,7 @@ void loop()
     //Example functions
     //mot.setMotorCounters(10000,-10000);
     //mot.setMotorSpeeds(3000,-3000);
-//
+
 //    if(digitalRead(PIN_BTN1)==LOW && showDemo == false)
 //    {
 //      showDemo = true;

@@ -1,17 +1,3 @@
-/*****************************************************************************
-** PROJECT-NAME: ISL MOTOR CONTROL
-** This projected is licensed under the terms of the MIT license
-** Copyright (c) 2015, ISL
-** All rights reserved.
-**
-******************************************************************************
-** FILENAME:    IslMotorControl.cpp
-** AUTHOR(S):   Mahmut Demir <mahmutdemir@gmail.com>
-** DESCRIPTION: This file provides functions for controlling arduino based
-* 				motor control card. Also contains some functions to use Minik
-* 				robot hardware.
-*****************************************************************************/
-
 #include "Arduino.h"
 #include "IslMotorControl.h"
 
@@ -121,7 +107,7 @@ IslMotorControl::IslMotorControl()
   PIDPos2     = new PID(&mot2Count, &mot2PIDPWMOut, &mot2TargetPos, KP_P_2, KI_P_2, KD_P_2, DIRECT);
   
   setPosParam((char)0x00, INIT_KP_P_1, INIT_KI_P_1, INIT_KD_P_1);
-  setPosParam((char)0x01, INIT_KP_P_2, INIT_KI_P_2, INIT_KD_P_2);
+	setPosParam((char)0x01, INIT_KP_P_2, INIT_KI_P_2, INIT_KD_P_2);
 	setSpeedParam((char)0x00, INIT_KP_S_1, INIT_KI_S_1, INIT_KD_S_1);
 	setSpeedParam((char)0x01, INIT_KP_S_2, INIT_KI_S_2, INIT_KD_S_2);
 
@@ -157,20 +143,7 @@ IslMotorControl::IslMotorControl()
   prevTime = 0;
   prevPIDTime = 0;
   prevSensorTime = 0;
-  prevPerSendTime = 0;
-  prevButtonSendTime = 0;
-    
-  //Initialize configuration parameters
-  config = (INIT_SEND_SPEED << CONFIG_SEND_SPEED) |
-		   (INIT_SEND_POS << CONFIG_SEND_POS)     |
-		   (INIT_SEND_FREQ1 << CONFIG_SEND_FREQ1) |
-		   (INIT_SEND_FREQ2 << CONFIG_SEND_FREQ2) |
-		   (INIT_SEND_FREQ3 << CONFIG_SEND_FREQ3) ;
-		   
-  readConfig(config);
-		   
 
-		   
   // Initialize the send buffer that we will use to send data
   sendBuffer.init(250);
 
@@ -182,18 +155,11 @@ IslMotorControl::IslMotorControl()
   t->every(1, flagUpdate);
 }
 
-void IslMotorControl::readConfig(int newConfig)
-{   
-  sendSpeedPeriodic = (newConfig >> CONFIG_SEND_SPEED) & 0x01;
-  sendPosPeriodic = (newConfig >> CONFIG_SEND_POS) & 0x01;
-  periodicSendFreq = (newConfig >> CONFIG_SEND_FREQ1) & 0x07;
-}
-
-//This function is used only for robotic arm control
 void IslMotorControl::sendPeriodicCounter()
 {
-  int packetLength = 5 + PROTOCOL_CONTROL_SIZE + PROTOCOL_N_FOOTER;
-  unsigned char pack[30];
+  int packetLength = 5 + PROTOCOL_CONTROL_SIZE
+      + PROTOCOL_N_FOOTER;
+  char pack[30];
 
   pack[0] = PROTOCOL_START_0;
   pack[1] = PROTOCOL_START_1;
@@ -221,155 +187,7 @@ void IslMotorControl::sendPeriodicCounter()
 
   //sendBuffer.clear();
   Serial.write(pack, packetLength + PROTOCOL_CONTROL_SIZE + PROTOCOL_N_FOOTER);
-  
 }
-
-
-void IslMotorControl::sendButtonStatus()
-{
-  int packetLength = 5 + PROTOCOL_CONTROL_SIZE + PROTOCOL_N_FOOTER;
-  unsigned char pack[30];
-
-  pack[0] = PROTOCOL_START_0;
-  pack[1] = PROTOCOL_START_1;
-  pack[2] = PROTOCOL_START_2;
-  pack[3] = 0x04;   //Slave
-  pack[4] = CMD_GET_BUTTON;
-  pack[5] = 0x0E;
-  pack[6] = DEVICEID; //receiver
-  pack[7] = 0x00;
-  pack[8] = 0x00;
-
- 
-  long temp = 0x00000000;
-  
-  int btn1 = digitalRead(PIN_BTN1);
-  int btn2 = digitalRead(PIN_BTN2);
-  int btn3 = digitalRead(PIN_BTN3);
-
-  pack[PROTOCOL_DATA_POS + 1] = (btn1 << 2) | (btn2 << 1) | btn3;
-		
-  packetLength = 2;
-
-  // recalculate the check sums
-  refreshPack(pack);
-
-  //sendBuffer.clear();
-  Serial.write(pack, packetLength + PROTOCOL_CONTROL_SIZE + PROTOCOL_N_FOOTER);
-  
-}
-
-void IslMotorControl::sendMotorSpeeds()
-{
-  int packetLength = 5 + PROTOCOL_CONTROL_SIZE + PROTOCOL_N_FOOTER;
-  unsigned char pack[30];
-
-  pack[0] = PROTOCOL_START_0;
-  pack[1] = PROTOCOL_START_1;
-  pack[2] = PROTOCOL_START_2;
-  pack[3] = 0x04;   //Slave
-  pack[4] = CMD_GET_SPEED;
-  pack[5] = 0x0F;
-  pack[6] = DEVICEID; //receiver
-  pack[7] = 0x00;
-  pack[8] = 0x00;
-
-  
-  long temp = 0x00000000;
-
-  //Send motor 0 speed
-  temp = (long)getMotorSpeed(0x00);
-  
-  int tempInt;
-  if (temp < 0)
-	tempInt = ((int)(temp*-1))*-1;
-  else
-	tempInt = temp;
-
-  pack[PROTOCOL_DATA_POS + 0] = (char)0x00;
-  pack[PROTOCOL_DATA_POS + 1] = char((tempInt >> 8) & 0x00FF);
-  pack[PROTOCOL_DATA_POS + 2] = char((tempInt) & 0x00FF);
-  packetLength = 3;
-
-  // recalculate the check sums
-  refreshPack(pack);
-
-  //sendBuffer.clear();
-  Serial.write(pack, packetLength + PROTOCOL_CONTROL_SIZE + PROTOCOL_N_FOOTER);
-  Serial.flush();
-  
-  //Send motor 1 speed
-  temp = (long)getMotorSpeed(0x01);
-  
-  if (temp < 0)
-	tempInt = ((int)(temp*-1))*-1;
-  else
-	tempInt = temp;
-
-  pack[PROTOCOL_DATA_POS + 0] = (char)0x01;
-  pack[PROTOCOL_DATA_POS + 1] = char((tempInt >> 8) & 0x00FF);
-  pack[PROTOCOL_DATA_POS + 2] = char((tempInt) & 0x00FF);
-  packetLength = 3;
-
-  // recalculate the check sums
-  refreshPack(pack);
-
-  //sendBuffer.clear();
-  Serial.write(pack, packetLength + PROTOCOL_CONTROL_SIZE + PROTOCOL_N_FOOTER);
-  Serial.flush();
-}
-void IslMotorControl::sendMotorPositions()
-{ 
-  int packetLength = 5 + PROTOCOL_CONTROL_SIZE + PROTOCOL_N_FOOTER;
-  unsigned char pack[30];
-
-  pack[0] = PROTOCOL_START_0;
-  pack[1] = PROTOCOL_START_1;
-  pack[2] = PROTOCOL_START_2;
-  pack[3] = 0x04;   //Slave
-  pack[4] = CMD_GET_COUNTER;
-  pack[5] = 0x11;
-  pack[6] = DEVICEID; //receiver
-  pack[7] = 0x00;
-  pack[8] = 0x00;
-
-  //Send motor 0 position
-  long temp = 0x00000000;
-
-  temp = (long)getMotorCounter(0x00);
-
-  pack[PROTOCOL_DATA_POS + 0] = (char)0x00;
-  pack[PROTOCOL_DATA_POS + 1] = char(temp >> 24);
-  pack[PROTOCOL_DATA_POS + 2] = char(temp >> 16);
-  pack[PROTOCOL_DATA_POS + 3] = char(temp >> 8);
-  pack[PROTOCOL_DATA_POS + 4] = char(temp);
-  packetLength = 5;
-
-  // recalculate the check sums
-  refreshPack(pack);
-
-  //sendBuffer.clear();
-  Serial.write(pack, packetLength + PROTOCOL_CONTROL_SIZE + PROTOCOL_N_FOOTER);
-  Serial.flush();
-  //Send motor 1 position
-  temp = (long)getMotorCounter(0x01);
-
-  pack[PROTOCOL_DATA_POS + 0] = (char)0x01;
-  pack[PROTOCOL_DATA_POS + 1] = char(temp >> 24);
-  pack[PROTOCOL_DATA_POS + 2] = char(temp >> 16);
-  pack[PROTOCOL_DATA_POS + 3] = char(temp >> 8);
-  pack[PROTOCOL_DATA_POS + 4] = char(temp);
-  packetLength = 5;
-
-  // recalculate the check sums
-  refreshPack(pack);
-
-  //sendBuffer.clear();
-  Serial.write(pack, packetLength + PROTOCOL_CONTROL_SIZE + PROTOCOL_N_FOOTER);
-  Serial.flush();
-  
-}
-
 
 double IslMotorControl::zeroAbsorb(double val)
 {
@@ -463,10 +281,8 @@ void IslMotorControl::posPIDUpdate()
 	 *         |__________
 	 *                   Speed
 	 */
-	float PWM_max_adaptive_1 = constrain(PWM_MAX - (fabs(mot1Speed) 
-														* ADAPTIVE_SPEED_MULTIPLIER),PWM_MIN,PWM_MAX);
-	float PWM_max_adaptive_2 = constrain(PWM_MAX - (fabs(mot2Speed) 
-														* ADAPTIVE_SPEED_MULTIPLIER),PWM_MIN,PWM_MAX);
+	float PWM_max_adaptive_1 = constrain(PWM_MAX - (fabs(mot1Speed) * ADAPTIVE_SPEED_MULTIPLIER),PWM_MIN,PWM_MAX);
+	float PWM_max_adaptive_2 = constrain(PWM_MAX - (fabs(mot2Speed) * ADAPTIVE_SPEED_MULTIPLIER),PWM_MIN,PWM_MAX);
 
     PIDPos1->Compute();
     mot1PWM = constrain(mot1PIDPWMOut, -1 * PWM_max_adaptive_1, PWM_max_adaptive_1);
@@ -519,8 +335,6 @@ void IslMotorControl::updateMotors()
   unsigned long timeInterval = curTime - prevTime;
   unsigned long timeIntervalPID = curTime - prevPIDTime;
   unsigned long timeIntervalSensor = curTime - prevSensorTime;
-  unsigned long timeIntervalPeriodicSend = curTime - prevPerSendTime;
-  unsigned long timeIntervalButtonSend = curTime - prevButtonSendTime;
 
   if (timeInterval > SPEED_SAMPLE_TIME)
   {
@@ -556,82 +370,61 @@ void IslMotorControl::updateMotors()
   {
     posPIDUpdate();
   }
-  
-  if(timeIntervalPeriodicSend > (periodicSendFreq+1)*PER_SEND_TIME)
-  {
-	prevPerSendTime = curTime;
-	if(sendSpeedPeriodic)
-    {
-	  sendMotorSpeeds();
-    }
-    if(sendPosPeriodic)
-    {
-	  sendMotorPositions();
-    }
-  }
-  
-  if(timeIntervalButtonSend > BUTTON_SEND_TIME)
-  {
-	  prevButtonSendTime = curTime;
-	  sendButtonStatus();
-  }
-  
-  
 }
 
 // Public Methods used in communication with motor card
 void IslMotorControl::getSpeedParam(char motor, int* param){
 
   if (motor == (char)0x00){
-    param[0] = KP_S_1*SPEED_PID_DIVIDER;
-    param[1] = KI_S_1*SPEED_PID_DIVIDER;
-    param[2] = KD_S_1*SPEED_PID_DIVIDER;
+    param[0] = KP_S_1*1000.0;
+    param[1] = KI_S_1*1000.0;
+    param[2] = KD_S_1*1000.0;
   }
   else{
-    param[0] = KP_S_2*SPEED_PID_DIVIDER;
-    param[1] = KI_S_2*SPEED_PID_DIVIDER;
-    param[2] = KD_S_2*SPEED_PID_DIVIDER;
+    param[0] = KP_S_2*1000.0;
+    param[1] = KI_S_2*1000.0;
+    param[2] = KD_S_2*1000.0;
   }
 
 }
 void IslMotorControl::getPosParam(char motor, int* param){
 
   if (motor == (char)0x00){
-    param[0] = KP_P_1*POS_PID_DIVIDER;
-    param[1] = KI_P_1*POS_PID_DIVIDER;
-    param[2] = KD_P_1*POS_PID_DIVIDER;
+    param[0] = KP_P_1*1000.0;
+    param[1] = KI_P_1*1000.0;
+    param[2] = KD_P_1*1000.0;
   }
   else{
-    param[0] = KP_P_2*POS_PID_DIVIDER;
-    param[1] = KI_P_2*POS_PID_DIVIDER;
-    param[2] = KD_P_2*POS_PID_DIVIDER;
+    param[0] = KP_P_2*1000.0;
+    param[1] = KI_P_2*1000.0;
+    param[2] = KD_P_2*1000.0;
   }
 }
 void IslMotorControl::setSpeedParam(char motor, int p, int i, int d){
   if (motor == (char)0x00){
-    KP_S_1 = p/SPEED_PID_DIVIDER;
-    KI_S_1 = i/SPEED_PID_DIVIDER;
-    KD_S_1 = d/SPEED_PID_DIVIDER;
+    KP_S_1 = p/1000.0;
+    KI_S_1 = i/1000.0;
+    KD_S_1 = d/1000.0;
     PIDSpeed1->SetTunings(KP_S_1, KI_S_1, KD_S_1);
   }
   else{
-    KP_S_2 = p/SPEED_PID_DIVIDER;
-    KI_S_2 = i/SPEED_PID_DIVIDER;
-    KD_S_2 = d/SPEED_PID_DIVIDER;
+    KP_S_2 = p/1000.0;
+    KI_S_2 = i/1000.0;
+    KD_S_2 = d/1000.0;
     PIDSpeed2->SetTunings(KP_S_2, KI_S_2, KD_S_2);
   }
 }
 void IslMotorControl::setPosParam(char motor, int p, int i, int d){
   if (motor == (char)0x00){
-    KP_P_1 = p/POS_PID_DIVIDER;
-    KI_P_1 = i/POS_PID_DIVIDER;
-    KD_P_1 = d/POS_PID_DIVIDER;
+    KP_P_1 = p/1000.0;
+    KI_P_1 = i/1000.0;
+    KD_P_1 = d/1000.0;
     PIDPos1->SetTunings(KP_P_1, KI_P_1, KD_P_1);
   }
   else{
-    KP_P_2 = p/POS_PID_DIVIDER;
-    KI_P_2 = i/POS_PID_DIVIDER;
-    KD_P_2 = d/POS_PID_DIVIDER;
+    KP_P_2 = p/1000.0;
+    KI_P_2 = i/1000.0;
+    KD_P_2 = d/1000.0;
     PIDPos2->SetTunings(KP_P_2, KI_P_2, KD_P_2);
   }
 }
@@ -686,7 +479,7 @@ void IslMotorControl::setMotorCounters(long counter1, long counter2){
 }
 
 
-void IslMotorControl::respondPack(unsigned char* pack) {
+void IslMotorControl::respondPack(char* pack) {
   int packetLength = 0;
   char tempArray[3];
   int  tempIntArray[3];
@@ -719,8 +512,7 @@ void IslMotorControl::respondPack(unsigned char* pack) {
     else if (getPackedTask(pack) == (char)CMD_SET_SPEED) {
       // setSpeed
       setMotorSpeed(pack[PROTOCOL_MOTOR_POS],
-        (int)(((((int)pack[PROTOCOL_DATA_POS + 1]) << 8) & 0xFF00) 
-						| ((((int)pack[PROTOCOL_DATA_POS + 2])) & 0x00FF)));
+        (int)(((((int)pack[PROTOCOL_DATA_POS + 1]) << 8) & 0xFF00) | ((((int)pack[PROTOCOL_DATA_POS + 2])) & 0x00FF)));
 
       packetLength = 1;
 
@@ -810,12 +602,10 @@ void IslMotorControl::respondPack(unsigned char* pack) {
     else if (getPackedTask(pack) == (char)CMD_SET_SPEEDS) {
 
       setMotorSpeed((char)0x00,
-        (int)(((((int)pack[PROTOCOL_DATA_POS + 0]) << 8)&0xFF00) 
-						| ((((int)pack[PROTOCOL_DATA_POS + 1]))&0x00FF) ));
+        (int)(((((int)pack[PROTOCOL_DATA_POS + 0]) << 8)&0xFF00) | ((((int)pack[PROTOCOL_DATA_POS + 1]))&0x00FF) ));
 
       setMotorSpeed((char)0x01,
-        (int)(((((int)pack[PROTOCOL_DATA_POS + 2]) << 8) & 0xFF00) 
-						| ((((int)pack[PROTOCOL_DATA_POS + 3])) & 0x00FF)));
+        (int)(((((int)pack[PROTOCOL_DATA_POS + 2]) << 8) & 0xFF00) | ((((int)pack[PROTOCOL_DATA_POS + 3])) & 0x00FF)));
        
       packetLength = 1;
     }
@@ -845,80 +635,30 @@ void IslMotorControl::respondPack(unsigned char* pack) {
 				
 		packetLength = 4;
     }
-    
-    // get led command
-    else if (getPackedTask(pack) == (char)CMD_GET_LED) {
-
-		int led1 = digitalRead(PIN_LED1);
-		int led2 = digitalRead(PIN_LED2);
-		pack[PROTOCOL_DATA_POS + 1] = (led1 << 1) | led2;
-				
-		packetLength = 2;
-    }
-    
-    // set led command
-    else if (getPackedTask(pack) == (char)CMD_SET_LED) {
-
-		digitalWrite(PIN_LED1, (int)((pack[PROTOCOL_DATA_POS + 1] >> 1) & 0x01));
-		digitalWrite(PIN_LED2, (int)(pack[PROTOCOL_DATA_POS + 1] & 0x01));
-				
-		packetLength = 2;
-    }
-    
-    // get button command
-    else if (getPackedTask(pack) == (char)CMD_GET_BUTTON) {
-
-		int btn1 = digitalRead(PIN_BTN1);
-		int btn2 = digitalRead(PIN_BTN2);
-		int btn3 = digitalRead(PIN_BTN3);
-		
-		pack[PROTOCOL_DATA_POS + 1] = (btn1 << 2) | (btn2 << 1) | btn3;
-				
-		packetLength = 2;
-    }
-    
-    // get config command
-    else if (getPackedTask(pack) == (char)CMD_GET_CONFIG) {
-		
-		pack[PROTOCOL_DATA_POS + 1] = char(config >> 8) & 0xFF;
-		pack[PROTOCOL_DATA_POS + 2] = char(config) & 0xFF;
-				
-		packetLength = 3;
-    }
-    
-    // set config command
-    else if (getPackedTask(pack) == (char)CMD_SET_CONFIG) {
-		
-        config = (int)(((((int)pack[PROTOCOL_DATA_POS + 1]) << 8)&0xFF00) 
-				      |((((int)pack[PROTOCOL_DATA_POS + 2])&0x00FF) ));
-				      
-	    readConfig(config);
-				
-		packetLength = 3;
-    }
 
     else {
       return;
     }
 
     // set the header of the pack
-    tempArray[0] = DEVICEID; 
+    tempArray[0] = DEVICEID; //getPackedSender(pack);    
     tempArray[1] = 0x00;
     tempArray[2] = 0x00;
     setPackHeader(pack, getPackedTask(pack),
       packetLength + PROTOCOL_CONTROL_SIZE
       + PROTOCOL_N_FOOTER, tempArray);
-      
     // recalculate the check sums
     refreshPack(pack);
 
     // send the pack
+
+    //sendBuffer.clear();
     Serial.write(pack, packetLength + PROTOCOL_CONTROL_SIZE + PROTOCOL_N_FOOTER);
 
   }
 }
 
-void IslMotorControl::refreshPack(unsigned char* pack) {
+void IslMotorControl::refreshPack(char* pack) {
   char temp, i;
   int packLength = (int)pack[5];
   // set start bytes
@@ -939,7 +679,7 @@ void IslMotorControl::refreshPack(unsigned char* pack) {
 }
 
 
-unsigned char IslMotorControl::isPackValid(unsigned char* pack) {
+char IslMotorControl::isPackValid(char* pack) {
   char temp, i;
   int packetLength = (int)pack[5];
   // check start bits
@@ -969,33 +709,33 @@ unsigned char IslMotorControl::isPackValid(unsigned char* pack) {
   return SUCCESS;
 }
 
-void IslMotorControl::getPackedId(unsigned char* pack, char* id) {
+void IslMotorControl::getPackedId(char* pack, char* id) {
   id[0] = pack[6];
   id[1] = pack[7];
   id[2] = pack[8];
   return;
 }
 
-boolean IslMotorControl::checkCardID(unsigned char *pack) {
+boolean IslMotorControl::checkCardID(char *pack) {
   if ((pack[6] == DEVICEID) && (pack[7] == 0x00) && (pack[8] == 0x00))
     return true;
   else
     return false;
 }
 
-char IslMotorControl::getPackedTask(unsigned char* pack) {
+char IslMotorControl::getPackedTask(char* pack) {
   return pack[4];
 }
 
-char IslMotorControl::getPackedLength(unsigned char* pack) {
+char IslMotorControl::getPackedLength(char* pack) {
   return pack[5];
 }
 
-char IslMotorControl::getPackedSender(unsigned char* pack) {
+char IslMotorControl::getPackedSender(char* pack) {
   return pack[3];
 }
 
-void IslMotorControl::setPackHeader(unsigned char* pack, char task, char packetLength, char* receiver) {
+void IslMotorControl::setPackHeader(char* pack, char task, char packetLength, char* receiver) {
   pack[3] = 0x04; // Designates sender is slave 
   pack[4] = task;
   pack[5] = packetLength;
@@ -1103,14 +843,4 @@ void IslMotorControl::toggleGreen()
   {
     digitalWrite(PIN_LED2, HIGH);
   }
-}
-
-long IslMotorControl::cm2Count(long cm)
-{
-	return cm*CM_2_COUNTS;
-}
-
-long IslMotorControl::count2Cm(long counts)
-{
-	return counts/CM_2_COUNTS;
 }
